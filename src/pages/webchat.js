@@ -7,8 +7,9 @@ import styled from 'styled-components';
 import zapBg from '../images/zap-background.png';
 import { ThemeContext } from '../context/ThemeProvider';
 import StoreHeader from '../components/StoreHeader';
+import io from 'socket.io-client';
 
-const { io } = window;
+// const { io } = window;
 const ENDPOINT = 'https://chamanozapback.herokuapp.com/'
 
 const WebChat = () => {
