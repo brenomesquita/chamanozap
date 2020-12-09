@@ -9,37 +9,150 @@ import { ThemeContext } from '../context/ThemeProvider';
 import StoreHeader from '../components/StoreHeader';
 import io from 'socket.io-client';
 
+import chatResponses from '../utils/chatResponses';
+const {
+  confirmPhoneNumber,
+  whatIsYourName,
+  whatIsYourCep,
+  whatIsYourComplement,
+  whatIsYourHouseNumber,
+  payment,
+} = chatResponses;
+
 // const { io } = window;
-const ENDPOINT = 'https://chamanozapback.herokuapp.com/'
+const ENDPOINT = 'localhost:3333/';
+const socket = io(ENDPOINT)
+
+const botMessage = (name, message, next, time, username = '') => 
+  ({ name, message, next, time, username });
+
+const whatIsYourNameChat = ({ message }, setBot, username, setUserName) => {
+  setUserName(message);
+  setBot(botMessage(
+    chatResponses[whatIsYourName.next].name,
+    chatResponses[whatIsYourName.next].message,
+    whatIsYourName.next,
+    new Date(),
+    username,
+  ))
+};
+const confirmPhoneNumberChat = ({ message }, setBot, username) => {
+  setBot(botMessage(
+    chatResponses[confirmPhoneNumber.next].name,
+    chatResponses[confirmPhoneNumber.next].message,
+    confirmPhoneNumber.next,
+    new Date(),
+    username,
+  ));
+};
+
+const whatIsYourCepChat = ({ message }, setBot, username) => {
+  // registerCep(message);
+  setBot(botMessage(
+    chatResponses[whatIsYourCep.next].name,
+    chatResponses[whatIsYourCep.next].message,
+    whatIsYourCep.next,
+    new Date(),
+    username,
+  ));
+};
+
+const whatIsYourComplementChat = ({ message }, setBot, username) => {
+  // registerComplement(message);
+  setBot(botMessage(
+    chatResponses[whatIsYourComplement.next].name,
+    chatResponses[whatIsYourComplement.next].message,
+    whatIsYourComplement.next,
+    new Date(),
+    username,
+  ));
+};
+
+const whatIsYourHouseNumberChat = ({ message }, setBot, username) => {
+  // registerComplement(message);
+  setBot(botMessage(
+    chatResponses[whatIsYourHouseNumber.next].name,
+    chatResponses[whatIsYourHouseNumber.next].message,
+    whatIsYourHouseNumber.next,
+    new Date(),
+    username,
+  ));
+};
+const paymentChat = ({ message }, setBot, username) => {
+  // registerComplement(message);
+  setBot(botMessage(
+    chatResponses[payment.next].name,
+    chatResponses[payment.next].message,
+    payment.next,
+    new Date(),
+    username,
+  ));
+};
+
+const findNext = (next, data, func, setBot, username, setUserName) => {
+  switch(func) {
+    case "whatIsYourName":
+      whatIsYourNameChat(data, setBot, username, setUserName);
+      break;
+    case "confirmPhoneNumber":
+      confirmPhoneNumberChat(data, setBot, username);
+      break;
+    case "whatIsYourCep":
+      whatIsYourCepChat(data, setBot, username);
+      break;
+    case "whatIsYourComplement":
+      whatIsYourComplementChat(data, setBot, username);
+      break;
+    case "whatIsYourHouseNumber":
+        whatIsYourHouseNumberChat(data, setBot, username);
+      break;
+    default:
+      paymentChat(data, setBot, username);
+      break;
+  }
+}
 
 const WebChat = () => {
-  const socket = useRef();
+  const [username, setUserName] = useState('');
   const [history, setHistory] = useState([{
     name: 'Eu', message: 'E aí, você tem o X-Bacon?', time: '11:15 AM'
   }]);
-
   const [event, setEvent] = useState('');
+  const [bot, setBot] = useState('');
+
 
   useEffect(() => {
-    socket.current = io(ENDPOINT);
-    socket.current.on('botMessage', ({ name, message, time, next, username = '' }) => {
+    setBot(botMessage(
+      whatIsYourName.name,
+      whatIsYourName.message,
+      'whatIsYourName',
+      new Date(),
+      username,
+    ));
+    socket.emit('clientRegister', {});
+    // socket.current.emit('confirmPhoneNumber', {});
+
+  }, []);
+
+  useEffect(() => {
+    const { name, time, next, username = '' } = bot;
+    let { message } = bot;
+    if(name!== undefined) {
+      const myTime = time.toString()
       if (message[0] === ',') { message = username + message; }
       setHistory((currentState) => (
         [...currentState, {
           name,
           message: message[0] === ',' ? username + message : message,
-          time 
+          myTime 
         } ]
       ));
-      setEvent(next);
-    });
-    socket.current.emit('clientRegister', {});
-    // socket.current.emit('confirmPhoneNumber', {});
-
-  }, [])
+      setEvent('next');
+    }
+  }, [bot])
 
   const handleSubmitMessage = (data) => {
-    socket.current.emit(event, data);
+    findNext(event, data, bot.next, setBot, username, setUserName);
     setHistory((currentState) => ([...currentState, data ]));
   }
 
@@ -56,7 +169,7 @@ const WebChat = () => {
     list-style-type: none;
     display: flex;
     flex-direction: column;
-    max-height: 55vh;
+    max-height: 45vh;
     overflow: auto;
   `;
 
