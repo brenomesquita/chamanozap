@@ -9,7 +9,7 @@ import { ThemeContext } from '../context/ThemeProvider';
 import StoreHeader from '../components/StoreHeader';
 
 const { io } = window;
-const ENDPOINT = 'http://localhost:3333'
+const ENDPOINT = 'https://chamanozapback.herokuapp.com/'
 
 const WebChat = () => {
   const socket = useRef();
